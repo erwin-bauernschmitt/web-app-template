@@ -1,0 +1,58 @@
+# Python (Django)
+*.pyc
+__pycache__/
+db.sqlite3
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.coverage
+.coverage.*
+htmlcov/
+*.spec
+
+# Django specific
+*.env
+.env.*
+local_settings.py
+media/
+staticfiles/
+instance/
+
+# Node.js (React)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+.cache/
+
+# Docker
+*.env
+Dockerfile*
+docker-compose.override.yml
+.dockerignore
+
+# PostgreSQL (Docker volume data)
+pg_data/
+pg_dump.sql
+
+# Nginx
+nginx.conf
+
+# Logs
+logs/
+*.log
+*.out
+*.pid
+*.err
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# VS Code settings (optional, depending on your setup)
+.vscode/
