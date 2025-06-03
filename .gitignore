@@ -1,58 +1,47 @@
-# Python (Django)
-*.pyc
-__pycache__/
-db.sqlite3
-*.log
-*.pot
+#------------------------------------------------------------------------------
+# Git Ignore
+#
+# This `.gitignore` defines the files in the project directory that should be 
+# ignored by Git when making a commit of the project to any repo.
+# 
+# Maintainer: erwin-bauernschmitt 
+# Last reviewed: 03/06/2025
+#------------------------------------------------------------------------------
+
+### ./backend/ ###
+# Virtual environment in backend/
+backend/my-django-venv/
+# Byte-compiled / optimized / DLL files
 *.pyc
 *.pyo
 *.pyd
-*.coverage
-.coverage.*
-htmlcov/
-*.spec
+__pycache__/
 
-# Django specific
-*.env
-.env.*
-local_settings.py
-media/
-staticfiles/
-instance/
+### ./frontend/ ###
+# Node modules folder
+frontend/node_modules/
+# Ignore package-lock.json (generate your own and remove this when ready)
+frontend/package-lock.json
+# HTTPS certs (generate your own self-signed certs, device-specific)
+*.pem
+*.key
 
-# Node.js (React)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnp/
-.pnp.js
-.cache/
+### ./postgres/ ###
+# Database data directory and any dumps
+postgres/data/
+postgres/*.sql
 
-# Docker
-*.env
-Dockerfile*
-docker-compose.override.yml
-.dockerignore
-
-# PostgreSQL (Docker volume data)
-pg_data/
-pg_dump.sql
-
-# Nginx
-nginx.conf
-
-# Logs
+### ./ ###
+# Production environment file (sensitive)
+.env.prod
+# The centralised logs folder from dev mode
 logs/
+# Catch all other logs not in specific dirs
 *.log
 *.out
 *.pid
 *.err
-
-# OS generated files
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# VS Code settings (optional, depending on your setup)
+# Windows
+desktop.ini
+# VS Code
 .vscode/

@@ -1,0 +1,91 @@
+#------------------------------------------------------------------------------
+# Docker Compose Configuration Override (Development)
+#
+# This Docker Compose YAML configuration file overrides some of the production
+# configurations in `docker-compose.yml` with more development-friendly ones. 
+# It is automatically detected and used when the `make dev` command is run. 
+#
+# Maintainer: erwin-bauernschmitt 
+# Last reviewed: 02/06/2025
+#------------------------------------------------------------------------------
+
+services:
+  backend:
+    environment:
+      - DJANGO_DEBUG=True  # Enable Django debug mode
+      - DJANGO_LIVE_RELOAD=True  # Enable live reloading in dev
+      - WDS_SOCKET_PORT=3000  # Ensure logs are visible in terminal
+    env_file:
+      - .env.dev  # Load Django secret key from environment file
+    # Command comments:
+      # Check if Postgres database is ready to accept connections
+      # Recheck every 2 seconds until Postgres is ready
+      # Run pre-built database migrations
+      # Launch the built-in Django development server as root
+    command: > 
+      sh -c "
+        until pg_isready -h postgres -p 5432 -U $POSTGRES_USER;
+        do echo 'Waiting for DB...'; sleep 2; done && 
+        python manage.py migrate &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    ports:
+      - "8000:8000"  # Expose Django development server port
+    volumes:
+      - ./backend:/app  # Bind mount code directory for live code editing
+      - ./logs/backend:/var/log/backend  # Bind mount log directory to persist
+
+  frontend:
+    build:
+      target: build  # Use build stage image (Stage 1) where npm is available
+    environment:
+      - NODE_ENV=development  # Set Node.js environment to development mode
+      - VITE_DEBUG=true   # Enable debug logging for Vite
+      - VITE_HTTPS=true  # Enable HTTPS for Vite
+      - VITE_HTTPS_CERT=/app/certs/fullchain.pem  # SSL certificate file path
+      - VITE_HTTPS_KEY=/app/certs/privkey.pem  # SSL key file path
+      - CHOKIDAR_USEPOLLING=true  # Improve file-watching in Docker
+      - WATCHPACK_POLLING=true  # Ensure file updates trigger HMR
+    # Command comments:
+      # Make sure the logs directory exists
+      # Give appuser ownership of the logs directory
+      # Launch the Vite development server on port 3000 as appuser (not root)
+      # Pipe sterr and stout messages through ts before appending to vite.log
+    command: >
+      /bin/sh -c "
+        mkdir -p /logs &&
+        chown -R appuser:appuser /logs &&
+        su appuser -c \"
+          npm install --package-lock-only --ignore-scripts &&
+          npm run dev -- --host 0.0.0.0 --port 3000 |
+          ts '[%Y-%m-%d %H:%M:%S]' >> /logs/vite.log 2>&1
+        \"
+      "
+    ports:
+      - "3000:3000"  # Expose Vite development server port
+      - "3001:3001"  # Expose WebSockets port for HMR
+    volumes:
+      - ./frontend:/app  # Bind mount code directory for live code editing
+      - frontend_node_modules:/app/node_modules # Cache with named volume
+      - ./logs/frontend:/logs  # Bind mount log directory for persistent logs
+      - /dev/null:/var/log/nginx  # Break prod volume mount for Nginx logs
+    stdin_open: true  # Keep the container 
+    tty: true  # Prevent container from exiting immediately
+
+  postgres: 
+    env_file:
+      - .env.dev  # Load Django secret key from environment file
+    # Command comments:
+      # Launch the Postgres database (without prod logrotate loop)
+    command: >
+      sh -c "
+        exec docker-entrypoint.sh postgres -c config_file=/var/lib/postgresql/postgresql.conf
+      "
+    ports:
+      - "5432:5432"  # Expose Postgres port for external access in dev mode
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data  # Bind mount DB data
+      - ./logs/postgres:/var/log/postgresql  # Bind mount logs for persistence
+
+volumes:
+  frontend_node_modules: {}  # Cache node_modules to speed up builds
