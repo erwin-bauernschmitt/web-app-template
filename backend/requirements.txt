@@ -1,0 +1,16 @@
+#------------------------------------------------------------------------------
+# Python Requirements for Back End Container
+#
+# This `requirements.txt` specifies the LTS version of Django used for the 
+# back end application. It also lists Gunicorn as the back end server, 
+# Pyscopg 3 as the Postgres database adapter, and Django Debug Toolbar for the
+# development configuration.
+#
+# Maintainer: erwin-bauernschmitt 
+# Last reviewed: 22/02/2025
+#------------------------------------------------------------------------------
+
+Django==4.2 
+gunicorn
+psycopg[binary]  
+django-debug-toolbar==4.3.0

@@ -1,0 +1,113 @@
+#------------------------------------------------------------------------------
+# Docker Compose Configuration (Production)
+#
+# This Docker Compose YAML configuration file defines the production 
+# configuration of the web app template. The `make prod` command will use this
+# file to build and launch the web app in production mode. 
+#
+# Maintainer: erwin-bauernschmitt 
+# Last reviewed: 02/06/2025
+#------------------------------------------------------------------------------
+
+services:
+  backend:  # Django backend app running on a Gunicorn server
+    build: 
+      context: ./backend  # Location of Dockerfile for custom backend image
+    image: backend:latest  # Custom image tag
+    container_name: backend  # Custom container name
+    environment:
+      - DJANGO_DEBUG=False  # Disable Django debug mode
+      - DJANGO_SETTINGS_MODULE=myapp.settings  # Identify settings module
+      - USE_POSTGRES=true  # Enable Postgres instead of SQLite
+      - POSTGRES_HOST=postgres  # Name of the Postgres service's container
+      - POSTGRES_PORT=5432  # Port that Postgres listens on
+      - PYTHONUNBUFFERED=1  # Prevents Python from buffering logs
+    env_file:
+      - .env.prod  # Load Django secret key from environment file
+    # Command comments:
+      # Wait for Postgres database to be accepting connections 
+      # Run pre-built database migrations
+      # Run backend logrotate check every 60 seconds
+      # Launch Gunicorn server running custom Django backend app as non-root
+    command: >
+      sh -c "
+        until pg_isready -h postgres -p 5432 -U ${POSTGRES_USER};
+        do echo 'Waiting for DB...'; sleep 2; done &&
+        python manage.py migrate &&
+        while true; 
+        do logrotate -s /home/appuser/logrotate_status /app/logrotate.conf;
+        sleep 60; done &
+        exec gunicorn myapp.wsgi:application --config /app/gunicorn.conf.py
+      "
+    volumes:
+      - backend_logs:/var/log/backend  # Named volume to persist logs
+    depends_on:
+      postgres:  # Ensure Postgres container is ready before startup
+        condition: service_healthy  # Postgres must pass defined healthcheck
+
+  frontend:  # React frontend app served by Nginx server (with reverse proxy)
+    build: 
+      context: ./frontend  # Location of Dockerfile for custom frontend image
+      target: final  # Use final stage image (Stage 2) where Nginx is available
+    image: frontend:latest  # Custom image tag
+    container_name: frontend  # Custom container name
+    environment:
+      - NODE_ENV=production  # Set Node.js environment to production mode
+    env_file:
+      - ./.env.prod # Load server_name for Nginx
+    # Command comments:
+      # Remove Nginx logging symlink (breaks persistent logging)
+      # Run frontend logrotate check every 60 seconds
+      # Launch Nginx server (in foreground to stop container exiting)
+      # envsubst '\$NGINX_SERVER_NAME' < /etc/nginx/nginx.template.conf > /home/appuser/nginx.conf &&
+      # exec nginx -c /home/appuser/nginx.conf -g 'daemon off;'
+    command: >
+      sh -c "
+        find /var/log/nginx -type l -delete || true &&
+        envsubst '\$${NGINX_SERVER_NAME}' < /etc/nginx/nginx.template.conf > /home/appuser/nginx.conf &&
+        while true; do
+          logrotate -s /home/appuser/logrotate_status /app/logrotate.conf;
+          sleep 60;
+        done &
+        exec nginx -c /home/appuser/nginx.conf -g 'daemon off;'
+      "
+    ports:
+      - "80:80"  # Expose Nginx HTTP port
+      - "443:443"  # Expose Nginx HTTPS port
+    volumes:
+      - frontend_logs:/var/log/nginx  # Named volume to persist logs
+    depends_on:
+      - backend  # Ensure backend container is running before startup
+
+  postgres:  # Postgres database
+    build: 
+      context: ./postgres  # Location of Dockerfile for custom Postgres image
+    image: postgres:latest  # Custom image tag
+    container_name: postgres  # Custom container name
+    env_file:
+      - .env.prod  # Load database credentials from environment file
+    # Command comments:
+      # Run the Postgres logrotate check as root every 60 seconds 
+      # Launch the Postgres database as the postgres user
+    command: >
+      sh -c "
+        while true;
+        do logrotate -s /home/postgres/logrotate_status /var/lib/postgresql/logrotate.conf;
+        sleep 60; done &
+        exec docker-entrypoint.sh postgres -c config_file=/var/lib/postgresql/postgresql.conf
+      "
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Bind mount DB data
+      - postgres_logs:/var/log/postgresql  # Named volume to persist logs
+    healthcheck: 
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 5s  # Check every five seconds
+      retries: 5  # Retry up to five times before marking DB as unhealthy
+      start_period: 5s  # Wait five seconds after startup before checking
+      timeout: 3s  # The Postgres database must respond within three seconds
+
+volumes:  # Docker-managed storage with named volumes
+  backend_logs: {}  # Gunicorn and Django logs from backend service
+  frontend_logs: {}  # Nginx logs from frontend service
+  postgres_logs: {}  # Postgres logs from database service
+  postgres_data: {}  # Postgres database contents 
