@@ -111,5 +111,13 @@ COPY --from=backend:latest \
 # Copy logrotate configurations
 COPY logrotate.conf /app/logrotate.conf
 
+# Define build argument for NGINX_SERVER_NAME
+ARG NGINX_SERVER_NAME
+
+# Substitute server name into nginx.conf in /home/appuser from env variable
+RUN envsubst '${NGINX_SERVER_NAME}' < /etc/nginx/nginx.template.conf > /home/appuser/nginx.conf && \
+    chmod 644 /home/appuser/nginx.conf && \
+    chown appuser:appuser /home/appuser/nginx.conf
+
 # Expose port 80 and port 443 for HTTP and HTTPS communication with Nginx
 EXPOSE 80 443

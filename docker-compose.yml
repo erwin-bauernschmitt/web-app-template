@@ -46,9 +46,11 @@ services:
         condition: service_healthy  # Postgres must pass defined healthcheck
 
   frontend:  # React frontend app served by Nginx server (with reverse proxy)
-    build: 
-      context: ./frontend  # Location of Dockerfile for custom frontend image
-      target: final  # Use final stage image (Stage 2) where Nginx is available
+    build:
+      context: ./frontend # Location of Dockerfile for custom frontend image
+      target: final # Use final stage image (Stage 2) where Nginx is available
+      args:
+        NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
     image: frontend:latest  # Custom image tag
     container_name: frontend  # Custom container name
     environment:
@@ -59,18 +61,15 @@ services:
       # Remove Nginx logging symlink (breaks persistent logging)
       # Run frontend logrotate check every 60 seconds
       # Launch Nginx server (in foreground to stop container exiting)
-      # envsubst '\$NGINX_SERVER_NAME' < /etc/nginx/nginx.template.conf > /home/appuser/nginx.conf &&
-      # exec nginx -c /home/appuser/nginx.conf -g 'daemon off;'
     command: >
-      sh -c "
-        find /var/log/nginx -type l -delete || true &&
-        envsubst '\$${NGINX_SERVER_NAME}' < /etc/nginx/nginx.template.conf > /home/appuser/nginx.conf &&
-        while true; do
-          logrotate -s /home/appuser/logrotate_status /app/logrotate.conf;
-          sleep 60;
-        done &
-        exec nginx -c /home/appuser/nginx.conf -g 'daemon off;'
-      "
+        sh -c "
+          find /var/log/nginx -type l -delete || true &&
+          while true; do
+            logrotate -s /home/appuser/logrotate_status /app/logrotate.conf;
+            sleep 60;
+          done &
+          exec nginx -c /home/appuser/nginx.conf -g 'daemon off;'
+        "
     ports:
       - "80:80"  # Expose Nginx HTTP port
       - "443:443"  # Expose Nginx HTTPS port

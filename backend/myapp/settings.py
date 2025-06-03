@@ -37,7 +37,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 
 ### EDIT {
 # Read allowed hosts from env variable
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split()
 ### }
 
 # Application definition
