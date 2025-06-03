@@ -365,7 +365,7 @@ Since the app template has already been bootstrapped and the build process is ha
 
 ### Getting Started Locally
 
-To start using this template for a new project, create a new local directory for your project and clone this repo to your project's directory. Delete the `.git` folder to stop tracking `web-app-template`. You can the contents of this `README.md` too and make it specific to your project instead. You will also need to create a `.env.prod` folder before you can launch Development Mode or Production Mode. You can just duplicate and rename `.env.dev` to start. 
+To start using this template for a new project, you can click `Use this template` -> `Create a repository` on the GitHub page of `web-app-template` to create a new repo for your project. Then clone this repo to your local machine. You can delete the contents of this `README.md` and make it specific to your project instead. You will also need to create a `.env.prod` folder before you can launch Development Mode or Production Mode. You can just duplicate and rename `.env.dev` to start. 
 
 ### Self-Signed Certs for Local HTTPS Testing
 
