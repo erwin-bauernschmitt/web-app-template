@@ -1,7 +1,7 @@
 # web-app-template
 
 *Maintainer: erwin-bauernschmitt* \
-*Last reviewed: 02/06/2025*
+*Last reviewed: 28/06/2025*
 
 This project intends to establish an accelerated process for creating small web apps through the use of a template app that can easily be launched and tested in either a development-friendly or a production-like configuration.
 
@@ -391,9 +391,6 @@ This template's `.gitignore` excludes the `package-lock.json` file so that your 
 
 **Note**: if you update `package.json` later, npm will update `package-lock.json` automatically to reflect the change and adjust the dependency tree as needed when you run `make dev`. Hence, any change to `package.json` should be followed by launching Development Mode if you want the package locks to be reflected in both Development Mode and Production Mode. Only delete `package-lock.json` again if you want to re-resolve the full dependency tree.
 
-### Creating Your Project's Repo
-
-Once you've prepared your new project locally, you can create a new repository for it using GitHub (or another remote service, if you prefer) using its web interface (or your terminal, if you prefer). With the empty repo ready, you can use GitKraken (or another Git client, including the terminal) to connnect your local project to your GitHub repo and push your freshly initialised template to GitHub. 
 
 ### Using Development Mode
 
