@@ -529,7 +529,7 @@ Since Django stores its superusers in the connected Postgres database, there wil
 
 1. A small and custom containerised web app can be hosted using a Virtual Private Server (VPS), which you can rent from a VPS provider (such as a Droplet from DigitalOcean). 
 
-1. You can then configure a DNS Adress Record through your domain name registrar to point your domain name to your VPS. 
+1. You can then configure DNS records through your domain name registrar to point your domain name to your VPS. 
 
 1. Once you have accessed your VPS through SSH, you can install the necessary software requirements such as Docker Desktop (or just Docker and Docker Compose), GitKraken (or just Git), and Make. 
 
